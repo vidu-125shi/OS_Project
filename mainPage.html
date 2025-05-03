@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Main Page</title>
+<style>
+  /* Reset some default browser styles */
+  body, html {
+    margin: 0;
+    padding: 0;
+    height: 50%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #864cc9, #7028b8);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 90vh;
+    padding-top: 50px;
+    padding-bottom: 50px;
+    box-sizing: border-box;
+  }
+  .container {
+    width: 90%;
+    max-width: 400px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px rgba(79, 42, 94, 0.918);
+    padding: 300px 700px;
+    text-align: center;
+    position: relative; /* Needed for child positioning */
+}
+
+.container > * {
+    position: relative;
+    top: -200px; /* Moves content up by 200px */
+}
+
+h1 {
+    margin: 0 0 20px;
+    font-size: 3.0rem;
+    font-weight: 700;
+    color: #333;
+    user-select: none;
+}
+
+  label {
+    display: block;
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+    color: #555;
+    font-weight: 600;
+    user-select: none;
+  }
+
+  select {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1.3rem;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background-color: white;
+    color: #333;
+    transition: border-color 0.25s ease;
+    cursor: pointer;
+  }
+
+  select:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
+
+  @media (max-width: 400px) {
+    h1 {
+      font-size: 2rem;
+    }
+
+    label {
+      font-size: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    
+    <h1>Welcome!</h1>
+    <label for="scheduling-algorithms">Choose a Scheduling Algorithm</label>
+    <select name="scheduling-algorithms" id="scheduling-algorithms">
+      <option value="" disabled selected>Select an algorithm</option>
+      <option value="fcfs">First Come First Serve (FCFS)</option>
+      <option value="sjf">Shortest Job First (SJF)</option>
+      <option value="priority">Priority Scheduling</option>
+      <option value="rr">Round Robin (RR)</option>
+      <option value="mlq">Multilevel Queue Scheduling</option>
+      <option value="mlfq">Multilevel Feedback Queue Scheduling</option>
+    </select>
+  
+</div>
+</body>
+</html>
