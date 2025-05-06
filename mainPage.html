@@ -80,6 +80,132 @@ h1 {
       font-size: 1rem;
     }
   }
+/* Table Styles */
+table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+    font-size: 1rem;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 10px 8px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Table headers */
+th {
+    background-color: #7028b8;
+    color: white;
+    user-select: none;
+}
+
+/* Input fields in table */
+input[type="text"],
+input[type="number"] {
+    width: 100%;
+    padding: 5px 7px;
+    font-size: 2rem;
+    border: 1.5px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus {
+    border-color: #864cc9;
+    outline: none;
+    box-shadow: 0 0 5px rgba(134, 76, 201, 0.7);
+}
+
+/* Buttons */
+button {
+    background-color: #7028b8;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    user-select: none;
+    white-space: nowrap;
+}
+
+button:hover {
+    background-color: #864cc9;
+}
+
+button:focus {
+    outline: 3px solid #b294e0;
+}
+
+/* Remove button */
+button.remove-process {
+    background-color: #c0392b;
+    padding: 6px 12px;
+}
+
+button.remove-process:hover {
+    background-color: #e74c3c;
+}
+
+/* Calculate button margin */
+#calculate {
+    margin-top: 20px;
+    width: 100%;
+}
+
+/* Results */
+#results {
+    margin-top: 24px;
+    text-align: left;
+    font-size: 1.1rem;
+    color: #333;
+    word-wrap: break-word;
+}
+
+/* Gantt Chart */
+#gantt-chart {
+    margin-top: 20px;
+    overflow-x: auto;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 10px;
+    white-space: nowrap;
+    font-family: monospace, monospace;
+    background: #f7f7f7;
+}
+
+/* Responsive Design */
+@media (max-width: 400px) {
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    label {
+        font-size: 1rem;
+    }
+
+    button {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+
+    table {
+        font-size: 0.9rem;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+        font-size: 0.9rem;
+    }
+}
 </style>
 </head>
 <body>
@@ -95,8 +221,38 @@ h1 {
       <option value="rr">Round Robin (RR)</option>
       <option value="mlq">Multilevel Queue Scheduling</option>
       <option value="mlfq">Multilevel Feedback Queue Scheduling</option>
-    </select>
-  
+      </select>
+      <div id="process-input" style="display: none;">
+        <h2>Process Details</h2>
+        <table id="process-table">
+            <thead>
+                <tr>
+                    <th>Process ID</th>
+                    <th>Arrival Time</th>
+                    <th>Burst Time</th>
+                    <th>Priority</th>
+                     <th>Time Quantum</th>
+      <th>Action</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+      <td><input type="text" class="process-id" /></td>
+      <td><input type="number" class="arrival-time" /></td>
+      <td><input type="number" class="burst-time" /></td>
+      <td><input type="number" class="priority" /></td>
+      <td><input type="number" class="time-quantum" /></td>
+      <td><button class="remove-process">Remove</button></td>
+  </tr>
+</tbody>
+</table>
+<button id="add-process">Add Process</button>
+<button id="calculate">Calculate</button>
+<div id="results"></div>
 </div>
+</div>
+
+<script src="script.js"></script>
+
 </body>
 </html>
