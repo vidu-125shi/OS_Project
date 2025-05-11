@@ -1,29 +1,71 @@
+/* STYLE.CSS */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     background: #f7f7f7;
-  }
-  nav {
+    line-height: 1.6;
+}
+
+nav {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 20px;
     background: #222;
     color: #fff;
-  }
-  nav ul {
+}
+
+nav ul {
     display: flex;
     list-style: none;
     gap: 15px;
-  }
-  nav ul li a {
+    margin: 0;
+    padding: 0;
+}
+
+nav ul li a {
     color: #fff;
     text-decoration: none;
-  }
-  .hero {
-    padding: 40px;
-    text-align: center;
-  }
-  button {
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+nav ul li a:hover {
+    background: #444;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-weight: bold;
+}
+
+select, input[type="number"], input[type="file"] {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+button {
     padding: 10px 20px;
     font-size: 16px;
     background: royalblue;
@@ -31,5 +73,42 @@ body {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-  }
-  
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #1a45a1;
+}
+
+#results {
+    margin-top: 30px;
+}
+
+#output {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+}
+
+.error {
+    color: #d32f2f;
+    padding: 10px;
+    background: #ffebee;
+    border-radius: 4px;
+}
+
+#stats {
+    background: #e8f5e9;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+#ganttChart {
+    margin-top: 20px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}

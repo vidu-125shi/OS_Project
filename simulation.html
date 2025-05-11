@@ -1,0 +1,170 @@
+<!-- SIMULATION.HTML -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulation</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav>
+    <h1>CPU Scheduling Simulator</h1>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="simulation.html">Simulation</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <h2>Run Simulation</h2>
+    <form id="upload-form">
+      <label>Choose Algorithm:
+        <select id="algorithm">
+          <option value="fcfs">FCFS</option>
+          <option value="sjf">SJF</option>
+          <option value="priority">Priority</option>
+          <option value="rr">Round Robin</option>
+        </select>
+      </label>
+      <label>Time Quantum (for RR):
+        <input type="number" id="quantum" min="1" value="2" disabled />
+      </label>
+      <input type="file" id="logfile" accept=".json" />
+      <button type="submit">Submit</button>
+    </form>
+    <div id="results">
+      <div id="output"></div>
+      <canvas id="ganttChart" width="800" height="200"></canvas>
+      <div id="stats"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    document.getElementById('algorithm').addEventListener('change', function () {
+      document.getElementById('quantum').disabled = this.value !== 'rr';
+    });
+
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = document.getElementById('logfile').files[0];
+      if (!file) {
+        alert('Please select a JSON file first');
+        return;
+      }
+
+      const algo = document.getElementById('algorithm').value;
+      const quantum = document.getElementById('quantum').value;
+      
+      try {
+        const fileContent = await file.text();
+        const processes = JSON.parse(fileContent);
+        
+        // Validate the input format
+        if (!Array.isArray(processes) || processes.length === 0 || 
+            !processes[0].hasOwnProperty('process_id') || 
+            !processes[0].hasOwnProperty('arrival_time')) {
+          throw new Error('Invalid file format. Please use the correct JSON format.');
+        }
+
+        const formData = new FormData();
+        formData.append('file', new Blob([fileContent], { type: 'application/json' }));
+        formData.append('algorithm', algo);
+        formData.append('quantum', quantum);
+
+        const res = await fetch('http://localhost:5000/simulate', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!res.ok) {
+          throw new Error(`Server error: ${res.status}`);
+        }
+        
+        const result = await res.json();
+        displayResults(result);
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('output').innerHTML = `<div class="error">${error.message}</div>`;
+      }
+    });
+
+    function displayResults(result) {
+  
+      // Display statistics
+      const statsDiv = document.getElementById('stats');
+      statsDiv.innerHTML = `
+        <h3>Simulation Results</h3>
+        <p>Average Waiting Time: ${result.avg_waiting_time.toFixed(2)} units</p>
+        <p>Total Processes: ${result.gantt.length}</p>
+      `;
+      
+      // Draw Gantt chart
+      drawGanttChart(result.gantt);
+    }
+
+    function drawGanttChart(data) {
+      const ctx = document.getElementById('ganttChart').getContext('2d');
+      
+      // Clear previous chart if it exists
+      
+      const labels = data.map(item => `${item.process_name} (P${item.pid})`);
+      const backgroundColors = labels.map((_, i) => `hsl(${i * 50 % 360}, 70%, 70%)`);
+
+      const chartData = {
+        labels: labels,
+        datasets: [{
+          label: 'Execution Time',
+          data: data.map((d, i) => ({x: d.start, y: i, x2: d.end})),
+          backgroundColor: backgroundColors,
+          borderWidth: 1,
+        }]
+      };
+
+      window.ganttChart = new Chart(ctx, {
+        type: 'bar',
+        data: chartData,
+        options: {
+          indexAxis: 'y',
+          parsing: {
+            xAxisKey: 'x',
+            x2AxisKey: 'x2',
+            yAxisKey: 'y'
+          },
+          responsive: true,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Time (seconds)'
+              },
+              beginAtZero: true
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Processes'
+              },
+              ticks: {
+                callback: function(value, index) {
+                  return labels[index];
+                }
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const data = context.raw;
+                  return `Start: ${data.x}, End: ${data.x2}, Duration: ${data.x2 - data.x}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
