@@ -1,0 +1,33 @@
+[
+  {
+    "process_id": 3152,
+    "process_name": "chrome.exe",
+    "arrival_time": "2025-05-11 19:11:03",
+    "burst_time": 0.171875,
+    "priority": 32,
+    "timestamp": "2025-05-11 19:58:02"
+  },
+  {
+    "process_id": 6964,
+    "process_name": "chrome.exe",
+    "arrival_time": "2025-05-11 19:11:08",
+    "burst_time": 117.328125,
+    "priority": 32768,
+    "timestamp": "2025-05-11 19:58:03"
+  },
+  {
+    "process_id": 8608,
+    "process_name": "chrome.exe",
+    "arrival_time": "2025-05-11 19:11:03",
+    "burst_time": 82.796875,
+    "priority": 32,
+    "timestamp": "2025-05-11 19:58:03"
+  },
+  {
+    "process_id": 9240,
+    "process_name": "chrome.exe",
+    "arrival_time": "2025-05-11 19:27:36",
+    "burst_time": 160.421875,
+    "priority": 64,
+    "timestamp": "2025-05-11 19:58:03"
+  }]

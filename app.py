@@ -73,7 +73,9 @@ def run_algorithm(data, algorithm, quantum):
 
     time = 0
     output = []
-    total_wt = 0
+    total_wt = 0  # Total waiting time
+    total_ta = 0   # Total turnaround time
+    
     for p in processes:
         if time < p['arrival']:
             time = p['arrival']
@@ -81,17 +83,35 @@ def run_algorithm(data, algorithm, quantum):
         time += p['burst']
         end = time
         wait = start - p['arrival']
+        turnaround = end - p['arrival']
         total_wt += wait
+        total_ta += turnaround
         output.append({
             "pid": p['pid'],
             "process_name": p['process_name'],
             "start": round(start, 2),
             "end": round(end, 2),
-            "wait": round(wait, 2)
+            "wait": round(wait, 2),
+            "turnaround": round(turnaround, 2)
         })
 
+    # Calculate metrics
     avg_wait = total_wt / len(processes) if processes else 0
-    return {"gantt": output, "avg_waiting_time": round(avg_wait, 2)}
+    avg_turnaround = total_ta / len(processes) if processes else 0
+    total_time = max(p['end'] for p in output) if output else 0
+    cpu_utilization = (sum(p['burst'] for p in processes) / total_time * 100) if total_time > 0 else 0
+    throughput = len(processes) / total_time if total_time > 0 else 0
+
+    return {
+        "gantt": output,
+        "metrics": {
+            "avg_waiting_time": round(avg_wait, 2),
+            "avg_turnaround_time": round(avg_turnaround, 2),
+            "cpu_utilization": round(cpu_utilization, 2),
+            "throughput": round(throughput, 4),
+            "total_time": round(total_time, 2)
+        }
+    }
 
 def round_robin(processes, quantum):
     from collections import deque
@@ -101,23 +121,31 @@ def round_robin(processes, quantum):
     output = []
     i = 0
     total_wt = 0
+    total_ta = 0
+    completed_processes = 0
     
+    # Initialize remaining time for all processes
+    for p in processes:
+        p['remaining'] = p['burst']
+        p['first_run'] = None
+        p['completion'] = None
+
     while i < len(processes) or queue:
         while i < len(processes) and processes[i]['arrival'] <= time:
-            processes[i]['remaining'] = processes[i]['burst']
             queue.append(processes[i])
             i += 1
             
         if queue:
             p = queue.popleft()
+            
+            # Record first run if not already set
+            if p['first_run'] is None:
+                p['first_run'] = time
+            
             exec_time = min(quantum, p['remaining'])
             start = time
             time += exec_time
             p['remaining'] -= exec_time
-            
-            if p['remaining'] <= 0:
-                wait_time = start - p['arrival'] - (p['burst'] - p['remaining'])
-                total_wt += wait_time
             
             output.append({
                 "pid": p['pid'],
@@ -128,11 +156,33 @@ def round_robin(processes, quantum):
             
             if p['remaining'] > 0:
                 queue.append(p)
+            else:
+                p['completion'] = time
+                turnaround = p['completion'] - p['arrival']
+                wait_time = turnaround - p['burst']
+                total_wt += wait_time
+                total_ta += turnaround
+                completed_processes += 1
         else:
             time += 1
     
+    # Calculate metrics
     avg_wait = total_wt / len(processes) if processes else 0
-    return {"gantt": output, "avg_waiting_time": round(avg_wait, 2)}
+    avg_turnaround = total_ta / len(processes) if processes else 0
+    total_time = time
+    cpu_utilization = (sum(p['burst'] for p in processes) / total_time )* 100 if total_time > 0 else 0
+    throughput = len(processes) / total_time if total_time > 0 else 0
+
+    return {
+        "gantt": output,
+        "metrics": {
+            "avg_waiting_time": round(avg_wait, 2),
+            "avg_turnaround_time": round(avg_turnaround, 2),
+            "cpu_utilization": round(cpu_utilization, 2),
+            "throughput": round(throughput, 4),
+            "total_time": round(total_time, 2)
+        }
+    }
 
 if __name__ == '__main__':
     app.run(debug=True)

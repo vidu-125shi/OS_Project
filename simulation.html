@@ -1,4 +1,3 @@
-<!-- SIMULATION.HTML -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,28 +19,82 @@
     <form id="upload-form">
       <label>Choose Algorithm:
         <select id="algorithm">
-          <option value="fcfs">FCFS</option>
-          <option value="sjf">SJF</option>
-          <option value="priority">Priority</option>
-          <option value="rr">Round Robin</option>
+          <option value="fcfs">First Come First Serve (FCFS)</option>
+          <option value="sjf">Shortest Job First (SJF)</option>
+          <option value="priority">Priority Scheduling</option>
+          <option value="rr">Round Robin (RR)</option>
         </select>
       </label>
       <label>Time Quantum (for RR):
         <input type="number" id="quantum" min="1" value="2" disabled />
       </label>
-      <input type="file" id="logfile" accept=".json" />
-      <button type="submit">Submit</button>
+      <label>Upload Process Data (JSON):
+        <input type="file" id="logfile" accept=".json" required />
+      </label>
+      <button type="submit">Run Simulation</button>
     </form>
-    <div id="results">
-      <div id="output"></div>
-      <canvas id="ganttChart" width="800" height="200"></canvas>
-      <div id="stats"></div>
+    
+    <div id="results" style="display: none;">
+      <div class="metrics-container">
+        <h3>Performance Metrics</h3>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <h4>Average Waiting Time</h4>
+            <p id="avg-waiting-time">0.00</p>
+            <small>Time units</small>
+          </div>
+          <div class="metric-card">
+            <h4>Average Turnaround Time</h4>
+            <p id="avg-turnaround-time">0.00</p>
+            <small>Time units</small>
+          </div>
+          <div class="metric-card">
+            <h4>CPU Utilization</h4>
+            <p id="cpu-utilization">0.00</p>
+            <small>%</small>
+          </div>
+          <div class="metric-card">
+            <h4>Throughput</h4>
+            <p id="throughput">0.00</p>
+            <small>Processes per unit time</small>
+          </div>
+        </div>
+      </div>
+      
+      <h3>Gantt Chart Visualization</h3>
+      <div class="chart-container">
+        <canvas id="ganttChart" width="800" height="300"></canvas>
+      </div>
+      
+      <div class="process-table">
+        <h3>Process Details</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Process ID</th>
+              <th>Process Name</th>
+              <th>Arrival Time</th>
+              <th>Burst Time</th>
+              <th>Start Time</th>
+              <th>End Time</th>
+              <th>Waiting Time</th>
+              <th>Turnaround Time</th>
+            </tr>
+          </thead>
+          <tbody id="process-details">
+          </tbody>
+        </table>
+      </div>
     </div>
+    
+    <div id="error-message" class="error" style="display: none;"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    document.getElementById('algorithm').addEventListener('change', function () {
+    let currentChart = null;
+    
+    document.getElementById('algorithm').addEventListener('change', function() {
       document.getElementById('quantum').disabled = this.value !== 'rr';
     });
 
@@ -49,7 +102,7 @@
       e.preventDefault();
       const file = document.getElementById('logfile').files[0];
       if (!file) {
-        alert('Please select a JSON file first');
+        showError('Please select a JSON file first');
         return;
       }
 
@@ -78,26 +131,88 @@
         });
         
         if (!res.ok) {
-          throw new Error(`Server error: ${res.status}`);
+          const error = await res.json();
+          throw new Error(error.error || 'Server error');
         }
         
         const result = await res.json();
         displayResults(result);
       } catch (error) {
+        showError(error.message);
         console.error('Error:', error);
-        document.getElementById('output').innerHTML = `<div class="error">${error.message}</div>`;
       }
     });
 
+    function showError(message) {
+      const errorDiv = document.getElementById('error-message');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+      document.getElementById('results').style.display = 'none';
+      
+      // Hide error after 5 seconds
+      setTimeout(() => {
+        errorDiv.style.display = 'none';
+      }, 5000);
+    }
+
     function displayResults(result) {
-  
-      // Display statistics
-      const statsDiv = document.getElementById('stats');
-      statsDiv.innerHTML = `
-        <h3>Simulation Results</h3>
-        <p>Average Waiting Time: ${result.avg_waiting_time.toFixed(2)} units</p>
-        <p>Total Processes: ${result.gantt.length}</p>
-      `;
+      // Hide error message if any
+      document.getElementById('error-message').style.display = 'none';
+      
+      // Show results section
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.style.display = 'block';
+      
+      // Display metrics
+      const metrics = result.metrics;
+      document.getElementById('avg-waiting-time').textContent = metrics.avg_waiting_time;
+      document.getElementById('avg-turnaround-time').textContent = metrics.avg_turnaround_time;
+      document.getElementById('cpu-utilization').textContent = metrics.cpu_utilization;
+      document.getElementById('throughput').textContent = metrics.throughput;
+      
+      // Display process details table
+      const tableBody = document.getElementById('process-details');
+      tableBody.innerHTML = '';
+      
+      // Group gantt entries by process to calculate totals
+      const processMap = {};
+      result.gantt.forEach(entry => {
+        if (!processMap[entry.pid]) {
+          processMap[entry.pid] = {
+            pid: entry.pid,
+            name: entry.process_name,
+            arrival: '', // Will be filled from original data
+            burst: entry.end - entry.start, // Sum of all execution bursts
+            start: entry.start,
+            end: entry.end,
+            wait: entry.wait || 0,
+            turnaround: entry.turnaround || 0
+          };
+        } else {
+          processMap[entry.pid].burst += (entry.end - entry.start);
+          processMap[entry.pid].end = entry.end;
+          if (entry.wait) processMap[entry.pid].wait = entry.wait;
+          if (entry.turnaround) processMap[entry.pid].turnaround = entry.turnaround;
+        }
+      });
+      
+      // Sort processes by start time and add to table
+      Object.values(processMap)
+        .sort((a, b) => a.start - b.start)
+        .forEach(proc => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${proc.pid}</td>
+            <td>${proc.name}</td>
+            <td>${proc.arrival}</td>
+            <td>${proc.burst.toFixed(2)}</td>
+            <td>${proc.start.toFixed(2)}</td>
+            <td>${proc.end.toFixed(2)}</td>
+            <td>${proc.wait.toFixed(2)}</td>
+            <td>${proc.turnaround.toFixed(2)}</td>
+          `;
+          tableBody.appendChild(row);
+        });
       
       // Draw Gantt chart
       drawGanttChart(result.gantt);
@@ -106,49 +221,84 @@
     function drawGanttChart(data) {
       const ctx = document.getElementById('ganttChart').getContext('2d');
       
-      // Clear previous chart if it exists
+      // Destroy previous chart if it exists
+      if (currentChart) {
+        currentChart.destroy();
+      }
       
-      const labels = data.map(item => `${item.process_name} (P${item.pid})`);
-      const backgroundColors = labels.map((_, i) => `hsl(${i * 50 % 360}, 70%, 70%)`);
-
-      const chartData = {
-        labels: labels,
-        datasets: [{
-          label: 'Execution Time',
-          data: data.map((d, i) => ({x: d.start, y: i, x2: d.end})),
-          backgroundColor: backgroundColors,
-          borderWidth: 1,
-        }]
-      };
-
-      window.ganttChart = new Chart(ctx, {
+      // Prepare data for Chart.js
+      const labels = [];
+      const datasets = [];
+      const colors = [
+        '#4e79a7', '#f28e2b', '#e15759', '#76b7b2', '#59a14f',
+        '#edc948', '#b07aa1', '#ff9da7', '#9c755f', '#bab0ac'
+      ];
+      
+      // Group by process for better visualization
+      const processMap = {};
+      data.forEach((entry, idx) => {
+        if (!processMap[entry.pid]) {
+          processMap[entry.pid] = {
+            label: `${entry.process_name} (P${entry.pid})`,
+            data: [],
+            backgroundColor: colors[Object.keys(processMap).length % colors.length],
+            borderColor: '#333',
+            borderWidth: 1
+          };
+        }
+        processMap[entry.pid].data.push({
+          x: [entry.start, entry.end],
+          y: `${entry.process_name} (P${entry.pid})`
+        });
+      });
+      
+      // Convert to Chart.js format
+      Object.values(processMap).forEach(process => {
+        datasets.push({
+          label: process.label,
+          data: process.data.map(d => ({
+            x: d.x,
+            y: d.y
+          })),
+          backgroundColor: process.backgroundColor,
+          borderColor: process.borderColor,
+          borderWidth: process.borderWidth
+        });
+      });
+      
+      currentChart = new Chart(ctx, {
         type: 'bar',
-        data: chartData,
+        data: {
+          labels: Object.values(processMap).map(p => p.label),
+          datasets: datasets
+        },
         options: {
           indexAxis: 'y',
-          parsing: {
-            xAxisKey: 'x',
-            x2AxisKey: 'x2',
-            yAxisKey: 'y'
-          },
           responsive: true,
           scales: {
             x: {
               title: {
                 display: true,
-                text: 'Time (seconds)'
+                text: 'Time (units)',
+                font: {
+                  weight: 'bold'
+                }
               },
-              beginAtZero: true
+              beginAtZero: true,
+              ticks: {
+                stepSize: 1
+              }
             },
             y: {
               title: {
                 display: true,
-                text: 'Processes'
+                text: 'Processes',
+                font: {
+                  weight: 'bold'
+                }
               },
               ticks: {
-                callback: function(value, index) {
-                  return labels[index];
-                }
+                autoSkip: false
               }
             }
           },
@@ -157,10 +307,17 @@
               callbacks: {
                 label: function(context) {
                   const data = context.raw;
-                  return `Start: ${data.x}, End: ${data.x2}, Duration: ${data.x2 - data.x}`;
+                  return `Start: ${data.x[0]}, End: ${data.x[1]}, Duration: ${(data.x[1] - data.x[0]).toFixed(2)}`;
                 }
               }
+            },
+            legend: {
+              display: false
             }
+          },
+          parsing: {
+            xAxisKey: 'x',
+            yAxisKey: 'y'
           }
         }
       });
