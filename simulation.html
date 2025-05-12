@@ -11,11 +11,13 @@
     <ul>
       <li><a href="index.html">Home</a></li>
       <li><a href="simulation.html">Simulation</a></li>
+      <li><a href="history.html">History</a></li>
     </ul>
   </nav>
 
   <div class="container">
     <h2>Run Simulation</h2>
+    
     <form id="upload-form">
       <label>Choose Algorithm:
         <select id="algorithm">
@@ -32,6 +34,7 @@
         <input type="file" id="logfile" accept=".json" required />
       </label>
       <button type="submit">Run Simulation</button>
+      <button type="button" id="view-history" onclick="window.location.href='history.html'">View History</button>
     </form>
     
     <div id="results" style="display: none;">
@@ -92,6 +95,18 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
+    // Check if we're viewing a history result
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('fromHistory')) {
+        const historyResult = JSON.parse(localStorage.getItem('historyResultToView') || 'null');
+        if (historyResult) {
+          displayResults(historyResult);
+          localStorage.removeItem('historyResultToView');
+        }
+      }
+    });
+    
     let currentChart = null;
     
     document.getElementById('algorithm').addEventListener('change', function() {
@@ -137,6 +152,7 @@
         
         const result = await res.json();
         displayResults(result);
+        saveToHistory(result, file, algo, quantum); 
       } catch (error) {
         showError(error.message);
         console.error('Error:', error);
@@ -321,6 +337,37 @@
           }
         }
       });
+    }
+
+    function saveToHistory(result, file, algorithm, quantum) {
+      // Get existing history or create new array
+      const history = JSON.parse(localStorage.getItem('simulationHistory') || '[]');
+      
+      // Read file content
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const newEntry = {
+          timestamp: new Date().toISOString(),
+          algorithm: algorithm,
+          quantum: algorithm === 'rr' ? quantum : null,
+          filename: file.name,
+          fileContent: e.target.result,
+          result: result
+        };
+        
+        // Add new entry to beginning of array
+        history.unshift(newEntry);
+        
+        // Keep only last 5 entries
+        if (history.length > 5) {
+          history.pop();
+        }
+        
+        // Save back to localStorage
+        localStorage.setItem('simulationHistory', JSON.stringify(history));
+      };
+      
+      reader.readAsText(file);
     }
   </script>
 </body>

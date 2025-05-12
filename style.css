@@ -214,3 +214,39 @@ tr:hover {
         justify-content: space-around;
     }
 }
+
+/* History page styles */
+.history-entry {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.history-entry h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.history-details {
+  margin-top: 10px;
+}
+
+.history-details p {
+  margin: 5px 0;
+}
+
+.history-details button {
+  margin-right: 10px;
+  padding: 5px 10px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.history-details button:hover {
+  background: #45a049;
+}
