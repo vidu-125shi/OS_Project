@@ -84,13 +84,13 @@ select, input[type="number"], input[type="file"] {
 
 select:focus, input:focus {
     outline: none;
-    border-color: #3498db;
+    border-color: #042b44;
 }
 
 button {
     padding: 12px 20px;
     font-size: 16px;
-    background: #3498db;
+    background: #042b44;
     color: white;
     border: none;
     border-radius: 5px;
@@ -101,7 +101,7 @@ button {
 }
 
 button:hover {
-    background: #2980b9;
+    background: #175075;
 }
 
 .error {
