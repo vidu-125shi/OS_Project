@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulation History</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav>
+    <h1>CPU Scheduling Simulator - History</h1>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="simulation.html">Simulation</a></li>
+      <li><a href="history.html">History</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <h2>Past Simulations</h2>
+    <div id="history-list">
+      <!-- History entries will be loaded here -->
+    </div>
+  </div>
+
+  <script>
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM loaded'); // Debug log
+      try {
+        loadHistory();
+      } catch (error) {
+        console.error('Error loading history:', error);
+        document.getElementById('history-list').innerHTML = 
+          '<p>Error loading history. Please check console for details.</p>';
+      }
+    });
+
+    function loadHistory() {
+      console.log('Loading history...'); // Debug log
+      
+      // Safely get history from localStorage
+      let history = [];
+      try {
+        const historyData = localStorage.getItem('simulationHistory');
+        history = historyData ? JSON.parse(historyData) : [];
+      } catch (e) {
+        console.error('Error parsing history:', e);
+      }
+
+      const historyList = document.getElementById('history-list');
+      
+      if (!historyList) {
+        console.error('History list element not found');
+        return;
+      }
+
+      if (history.length === 0) {
+        historyList.innerHTML = '<p>No simulation history found.</p>';
+        return;
+      }
+
+      historyList.innerHTML = '';
+      
+      history.forEach((entry, index) => {
+        // Validate entry structure
+        if (!entry || typeof entry !== 'object') {
+          console.warn('Invalid history entry:', entry);
+          return;
+        }
+
+        const entryDiv = document.createElement('div');
+        entryDiv.className = 'history-entry';
+        
+        // Safely build the entry HTML
+        try {
+          entryDiv.innerHTML = `
+            <h3>Simulation #${index + 1} - ${entry.timestamp ? new Date(entry.timestamp).toLocaleString() : 'No date'}</h3>
+            <div class="history-details">
+              <p><strong>Algorithm:</strong> ${entry.algorithm || 'Unknown'}</p>
+              ${entry.quantum ? `<p><strong>Time Quantum:</strong> ${entry.quantum}</p>` : ''}
+              <p><strong>File:</strong> ${entry.filename || 'Unknown file'}</p>
+              <button onclick="viewResults(${index})">View Results</button>
+              <button onclick="deleteEntry(${index})">Delete</button>
+            </div>
+          `;
+          historyList.appendChild(entryDiv);
+        } catch (e) {
+          console.error('Error creating history entry:', e);
+        }
+      });
+    }
+
+    // Rest of your functions (viewInputFile, viewResults, deleteEntry) remain the same
+   
+
+    function viewResults(index) {
+      const history = JSON.parse(localStorage.getItem('simulationHistory') || '[]');
+      if (index >= 0 && index < history.length) {
+        const entry = history[index];
+        localStorage.setItem('historyResultToView', JSON.stringify(entry.result));
+        window.open('simulation.html?fromHistory=true', '_blank');
+      }
+    }
+
+    function deleteEntry(index) {
+      const history = JSON.parse(localStorage.getItem('simulationHistory') || '[]');
+      if (index >= 0 && index < history.length) {
+        if (confirm('Are you sure you want to delete this simulation record?')) {
+          history.splice(index, 1);
+          localStorage.setItem('simulationHistory', JSON.stringify(history));
+          loadHistory();
+        }
+      }
+    }
+
+
+  </script>
+</body>
+</html>
